@@ -61,7 +61,7 @@ def convert_single_mcap_to_h5(mcap_file, output_file, args):
         # export mid camera data
         print(f"Start write mid camera data...")
         sync_data = [d["decode_data"] for d in ref_topic_data]
-        write_img(camera_group, "mid_fisheye_color", sync_data)
+        write_img(camera_group, "mid_fisheye_color", sync_data, args.img_new_width)
         
         # export stereo camera data
         if args.stereo_camera:
@@ -86,8 +86,8 @@ def convert_single_mcap_to_h5(mcap_file, output_file, args):
                 right_wide_sync_data.append(
                     data["/robot0/sensor/camera2/compressed"]["decode_data"]
                 )
-            write_img(camera_group, "left_wide_color", left_wide_sync_data)
-            write_img(camera_group, "right_wide_color", right_wide_sync_data)
+            write_img(camera_group, "left_wide_color", left_wide_sync_data, args.img_new_width)
+            write_img(camera_group, "right_wide_color", right_wide_sync_data, args.img_new_width)
 
         # export tactile data
         if args.tactile:
@@ -126,6 +126,7 @@ def parse_args():
     parser.add_argument("--mcap-file", type=str, default="", help="input mcap file path")
     parser.add_argument("--task-dir", type=str, default="", help="the task dir in matrix studio")
     parser.add_argument("--out-path", type=str, default="", help="output h5 file path")
+    parser.add_argument("--img-new-width", type=int, default=-1, help="scale the img according to the new width")
     parser.add_argument("--imu", action="store_true", help="export imu data")
     parser.add_argument("--stereo-camera", action="store_true", help="export stereo camera data")
     parser.add_argument("--tactile", action="store_true", help="export tactile sensor data")
