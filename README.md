@@ -220,7 +220,7 @@ for d in vio_pose_data:
         timestamp=d["data"].header.timestamp
     )
 ```
-The decoded data of each topic is stored in the `decode_data` field, please refer to the section for details [camera sensor data](#camera-sensor-data).
+The decoded data of each topic is stored in the `decode_data` field, please refer to the section for details [Mcap](#mcap).
 
 
 ### 2. convert mcap to h5
@@ -229,6 +229,9 @@ The decoded data of each topic is stored in the `decode_data` field, please refe
 ```shell
 # Generate the H5 file with the same name in the MCAP file directory
 python mcap_to_h5.py --mcap-file YOUR_MCAP_FILE_PATH
+
+# Means to resize the img proportionally to a new width(640)
+python mcap_to_h5.py --mcap-file YOUR_MCAP_FILE_PATH --img-new-width 640
 
 # Generate the H5 file in the given directory
 python mcap_to_h5.py --mcap-file YOUR_MCAP_FILE_PATH --out_path H5_FILE_PATH
