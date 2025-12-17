@@ -31,6 +31,7 @@ def parse_single_topic(reader: McapReader, topic: str):
 class McapLoader:
     AUTO_DECOMPRESS_MAP = {
         "CompressedImage": img_parser,
+        "CompressedVideo": img_parser,
         "IMUMeasurement": imu_parser,
         "MagneticEncoderMeasurement": magnetic_encoder_parser,
         "TactileMeasurement": tactile_parser,
