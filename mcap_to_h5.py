@@ -7,6 +7,7 @@ from utils.h5_tools import write_array, write_img
 from utils.io import load_json
 import numpy as np
 import argparse
+import pdb
 
 # reference topic
 REF_TOPIC = "/robot0/sensor/camera0/compressed"
@@ -52,22 +53,29 @@ def convert_single_mcap_to_h5(mcap_file, output_file, args):
     ref_timestamp = [d["data"].header.timestamp for d in ref_topic_data]
     ref_topic_seq_num = bag.get_topic_seq_num(REF_TOPIC)
 
+    # pre process mid camera data
+    print(f"Start write mid camera data...")
+    sync_ref_data = [d["decode_data"] for d in ref_topic_data]
+    # if sync_data is all None, set the flag to True
+    if all(data is None for data in sync_ref_data):
+        print(f"Mid camera data is all None, skip decoding")
+        return
+
     # step 2
     # write all data to h5df file
     with h5py.File(output_file, "w") as f:
         observations = f.create_group("observations")
         camera_group = observations.create_group("cameras")
 
-        # export mid camera data
-        print(f"Start write mid camera data...")
-        sync_data = [d["decode_data"] for d in ref_topic_data]
-        write_img(camera_group, "mid_fisheye_color", sync_data, args.img_new_width)
+        write_img(camera_group, "mid_fisheye_color", sync_ref_data, args.img_new_width)
         
         # export stereo camera data
         if args.stereo_camera:
             print(f"Start write stereo camera data...")
             left_wide_sync_data = []
             right_wide_sync_data = []
+            bag.register_sync_relation_with_time(REF_TOPIC, "/robot0/sensor/camera1/compressed")
+            bag.register_sync_relation_with_time(REF_TOPIC, "/robot0/sensor/camera2/compressed")
             for _idx in ref_topic_seq_num:
                 data = bag.get_topic_data_by_seq_num(
                     REF_TOPIC,

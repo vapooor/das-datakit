@@ -1,9 +1,17 @@
 import pdb
 import cv2
+import numpy as np
 
 def write_img(group, name, data, img_new_width):
-    first_image = data[0]
-    ori_height, ori_width, channels = first_image.shape
+    ori_height, ori_width, channels = None, None, None
+    ori_dtype = None
+    for d in data:
+        if d is not None:
+            ori_height, ori_width, channels = d.shape
+            ori_dtype = d.dtype
+    
+    new_data = [d if d is not None else np.zeros((ori_height, ori_width, channels), dtype=ori_dtype) for d in data]
+
     if img_new_width > 0:
         width = img_new_width
         height = max(1, int(ori_height * img_new_width / ori_width))
@@ -13,12 +21,12 @@ def write_img(group, name, data, img_new_width):
 
     images_ds = group.create_dataset(
         name,
-        shape=(len(data), height, width, channels),
-        dtype=first_image.dtype,
+        shape=(len(new_data), height, width, channels),
+        dtype=ori_dtype,
         compression="gzip",
         compression_opts=4
     )
-    for i, img in enumerate(data):
+    for i, img in enumerate(new_data):
         if img_new_width > 0:
             img = cv2.resize(img, (width, height))
         images_ds[i] = img
