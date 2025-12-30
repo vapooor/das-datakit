@@ -28,8 +28,20 @@ def img_parser(data: list) -> list:
         assert ValueError("you should pass a list of item when decompressing image")
     all_decode_data = []
     video_decoder = VideoDecoder()
+    has_find_first_kf = False
     for msg in data:
-        decoded_data = video_decoder.decode_frame_container_v2(msg.data)
+        nal_bytes = msg.data
+        start_offset = 4 if nal_bytes.startswith(b"\x00\x00\x00\x01") else 3 if nal_bytes.startswith(b"\x00\x00\x01") else 0
+        nal_unit_type = nal_bytes[start_offset] & 0x1F
+        if nal_unit_type != 7 and (not has_find_first_kf):  # 关键帧
+            decoded_data = None
+        else:
+            has_find_first_kf = True
+            try:
+                decoded_data = video_decoder.decode_frame_container_v2(msg.data)
+            except Exception as e:
+                decoded_data = None
+
         if decoded_data is None:
             all_decode_data.append(None)
         else:
@@ -38,8 +50,8 @@ def img_parser(data: list) -> list:
                     all_decode_data.append(_d)
             else:
                 all_decode_data.append(decoded_data)
+    
     return all_decode_data
-
 
 def imu_parser(data: list) -> list:
     all_decoder_data = []

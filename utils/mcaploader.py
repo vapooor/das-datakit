@@ -1,7 +1,7 @@
 import numpy as np
 import os.path as osp
 import json
-from mcap.reader import make_reader, McapReader
+from mcap.reader import make_reader, McapReader, NonSeekingReader
 from mcap.writer import Writer
 from mcap_protobuf.decoder import DecoderFactory
 from mcap_protobuf.writer import Writer
@@ -14,13 +14,17 @@ from .topic_parser import (
 )
 from collections import defaultdict
 from .sync_graph import RelationGraph
+import io
+import pdb
 
 def ns_to_s(ns):
     return float(ns) / 1e9
 
 def parse_single_topic(reader: McapReader, topic: str):
     topic_msgs = []
-    for schema, channel, message, proto_msg in reader.iter_decoded_messages(topics=[topic]):
+    for schema, channel, message, proto_msg in reader.iter_decoded_messages():
+        if channel.topic != topic:
+            continue
         topic_msgs.append({
             "data": proto_msg,
             "log_time": message.log_time,
@@ -52,17 +56,25 @@ class McapLoader:
         self.sync_graph = RelationGraph()
 
     def init_reader(self):
-        self._stream = open(self._bag_path, "rb")
-        self._mcap_reader = make_reader(self._stream, decoder_factories=[DecoderFactory()])
-
+        self._stream = io.BytesIO(open(self._bag_path, "rb").read())
+        self._mcap_reader = NonSeekingReader(self._stream, decoder_factories=[DecoderFactory()])
+    
+    def _reset_stream(self):
+        self._stream.seek(0)
+        self._mcap_reader = NonSeekingReader(self._stream, decoder_factories=[DecoderFactory()])
+    
     def get_statistic_info(self):
+        self._reset_stream()
         topic_summary = self._mcap_reader.get_summary()
+        self._reset_stream()
         header = self._mcap_reader.get_header()
         self._topic_header = header
         # parse iter info
+        self._reset_stream()
         meta_data = self._mcap_reader.iter_metadata()
-        attachments = self._mcap_reader.iter_attachments()
         self._topic_meta = [meta for meta in meta_data]
+        self._reset_stream()
+        attachments = self._mcap_reader.iter_attachments()
         self._topic_attachments = [att for att in attachments]
 
         # read topic->id mapping
@@ -208,6 +220,7 @@ class McapLoader:
             return
         bag_data = {}
         for topic_name in not_loaded_topics:
+            self._reset_stream()
             topic_msgs = parse_single_topic(self._mcap_reader, topic_name)
             # auto decompress
             if auto_decompress:
@@ -242,6 +255,7 @@ class McapLoader:
                 decompressed_data = func(proto_data)
                 for idx, d in enumerate(decompressed_data):
                     topic_data[idx]["decode_data"] = d
+                topic_data = [d for d in topic_data if d["decode_data"] is not None]
         return topic_data
     
     def get_bag_data(self):
