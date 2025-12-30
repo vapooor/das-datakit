@@ -111,16 +111,17 @@ def convert_single_mcap_to_h5(mcap_file, output_file, args):
             write_array(tactile_group, "right", np.array(tactile_right_data))
 
         # export pose data
-        print(f"Start write pose data...")
-        eef_pose_data = get_inter_data(
-            bag, "/robot0/vio/eef_pose", ref_timestamp, inter_type="pose"
-        )
-        gripper_data = get_inter_data(
-            bag, "/robot0/sensor/magnetic_encoder", ref_timestamp, inter_type="linear"
-        )
-        action_array = np.concatenate([eef_pose_data, gripper_data], axis=1)
-        write_array(observations, "eef_pos", action_array)
-        write_array(f, "action", action_array)
+        if args.vio:
+            print(f"Start write pose data...")
+            eef_pose_data = get_inter_data(
+                bag, "/robot0/vio/eef_pose", ref_timestamp, inter_type="pose"
+            )
+            gripper_data = get_inter_data(
+                bag, "/robot0/sensor/magnetic_encoder", ref_timestamp, inter_type="linear"
+            )
+            action_array = np.concatenate([eef_pose_data, gripper_data], axis=1)
+            write_array(observations, "eef_pos", action_array)
+            write_array(f, "action", action_array)
 
         if args.imu:
             print(f"Start write imu data...")
@@ -136,6 +137,7 @@ def parse_args():
     parser.add_argument("--out-path", type=str, default="", help="output h5 file path")
     parser.add_argument("--img-new-width", type=int, default=-1, help="scale the img according to the new width")
     parser.add_argument("--imu", action="store_true", help="export imu data")
+    parser.add_argument("--vio", action="store_true", help="export vio and action data")
     parser.add_argument("--stereo-camera", action="store_true", help="export stereo camera data")
     parser.add_argument("--tactile", action="store_true", help="export tactile sensor data")
     parser.add_argument("--resume", action="store_true", help="skip processed H5 files")
