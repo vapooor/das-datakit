@@ -55,6 +55,13 @@ PROTO_MAPPING = {
     "/robot1/sensor/magnetic_encoder": MagneticEncoderMeasurement,
     "/robot1/vio/eef_pose": PoseInFrame,
     "/robot1/sim/robot_info": RobotInfo,
+
+    "/robot0/sensor/camera3/compressed": CompressedImage,
+    "/robot0/sensor/camera4/compressed": CompressedImage,
+    "/robot0/sensor/camera5/compressed": CompressedImage,
+    "/robot0/sensor/camera3/camera_info": CameraCalibration,
+    "/robot0/sensor/camera4/camera_info": CameraCalibration,
+    "/robot0/sensor/camera5/camera_info": CameraCalibration,
 }
 
 def ns_to_s(ns):

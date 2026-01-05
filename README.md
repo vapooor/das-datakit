@@ -204,24 +204,22 @@ The purpose of the script is to parse the required topic data from the MCAP, the
 ```python
 # decode images
 camera0_img_data = bag.get_topic_data("/robot0/sensor/camera0/compressed")
-for d in camera0_img_data:
-    single_frame_img = dict(
-        data=d["decode_data"], # [h, w, c], bgr
-        timestamp=d["data"].header.timestamp
-    )
-    # save image
-    # cv2.imwrite("debug.jpg", single_frame_img["data"])
-
+if camera0_img_data is not None:
+    for d in camera0_img_data:
+        single_frame_img = dict(
+            data=d["decode_data"], # [h, w, c], bgr
+            timestamp=d["data"].header.timestamp
+        )
 # decode vio pose
 vio_pose_data = bag.get_topic_data("/robot0/vio/eef_pose")
-for d in vio_pose_data:
-    single_frame_pose = dict(
-        data=d["decode_data"], # [Pos_X, Pos_Y, Pos_Z, Q_X, Q_Y, Q_Z, Q_W], detailed information can be found in README.md
-        timestamp=d["data"].header.timestamp
-    )
+if vio_pose_data is not None:
+    for d in vio_pose_data:
+        single_frame_pose = dict(
+            data=d["decode_data"], # [Pos_X, Pos_Y, Pos_Z, Q_X, Q_Y, Q_Z, Q_W], detailed information can be found in README.md
+            timestamp=d["data"].header.timestamp
+        )
 ```
-The decoded data of each topic is stored in the `decode_data` field, please refer to the section for details [Mcap](#mcap).
-
+The decoded data of each topic is stored in the `decode_data` field, please refer to the section for details [Mcap](#mcap). After executing the script, the h264 video in the specified camera topic will be decoded into images and then saved as an mp4 file.
 
 ### 2. convert mcap to h5
 `By default, H5 files only store mid fisheye camera data, vio pose, and action`

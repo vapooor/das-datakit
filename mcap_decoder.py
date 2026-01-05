@@ -6,77 +6,50 @@ import pdb
 def parse_mcap(mcap_file):
     bag = McapLoader(mcap_file)
     print(bag.all_topic_names)
-    # step 1
-    # parse all data we need
-    bag.load_topics(bag.all_topic_names, auto_sync=False)
     print(bag)
 
     # decode images
-    camera0_img_data = bag.get_topic_data("/robot1/sensor/camera0/compressed")
+    camera0_img_data = bag.get_topic_data("/robot0/sensor/camera0/compressed")
 
-    video_writer = None
-    fps = 30
-    output_video_path = "camera0_output.mp4"
+    if camera0_img_data is not None:
+        video_writer = None
+        fps = 30
+        output_video_path = "camera0_output.mp4"
+        print(f"Find {len(camera0_img_data)} camera0 images, start to save video...")
+        for d in camera0_img_data:
+            single_frame_img = dict(
+                data=d["decode_data"],  # [h, w, c], bgr
+                timestamp=d["data"].header.timestamp,
+            )
+            if video_writer is None:
+                h, w, c = single_frame_img["data"].shape
+                h = h // 6
+                w = w // 6
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                video_writer = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h))
 
-    for d in camera0_img_data:
-        single_frame_img = dict(
-            data=d["decode_data"],  # [h, w, c], bgr
-            timestamp=d["data"].header.timestamp,
-        )
-        if video_writer is None:
-            h, w, c = single_frame_img["data"].shape
-            h = h // 4
-            w = w // 4
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-            video_writer = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h))
+            img = cv2.resize(single_frame_img["data"], (w, h))
+            video_writer.write(img)
 
-        img = cv2.resize(single_frame_img["data"], (w, h))
-        video_writer.write(img)
+        if video_writer is not None:
+            video_writer.release()
+            print(f"Video saved to: {output_video_path}")
+    else:
+        print("No camera0 images found")
 
-    if video_writer is not None:
-        video_writer.release()
-        print(f"视频保存完成: {output_video_path}")
-
-    # decode vio pose
-    vio_pose_data = bag.get_topic_data("/robot0/sensor/imu")
-    for d in vio_pose_data:
-        single_frame_pose = dict(
-            data=d[
-                "decode_data"
-            ],  # [Pos_X, Pos_Y, Pos_Z, Q_X, Q_Y, Q_Z, Q_W], detailed information can be found in README.md
-            timestamp=d["data"].header.timestamp,
-        )
-
-    # get aligned data by timestamp
-    bag.register_sync_relation_with_time(
-        "/robot0/sensor/camera0/compressed", "/robot0/sensor/imu"
-    )
-    camera0_idx = bag.get_topic_seq_num(
-        "/robot0/sensor/camera0/compressed"
-    )  # anchor topic
-    for seq_idx in camera0_idx:
-        data = bag.get_topic_data_by_seq_num(
-            "/robot0/sensor/camera0/compressed",
-            seq_idx,
-            sync_topics=["/robot0/sensor/imu"],
-        )
-        if data is None:
-            continue
-        frame_img = dict(
-            data=data["/robot0/sensor/camera0/compressed"][
-                "decode_data"
-            ],  # [h, w, c], bgr
-            timestamp=data["/robot0/sensor/camera0/compressed"][
-                "data"
-            ].header.timestamp,
-        )
-        frame_pose = dict(
-            data=data["/robot0/sensor/imu"][
-                "decode_data"
-            ],  # [Pos_X, Pos_Y, Pos_Z, Q_X, Q_Y, Q_Z, Q_W], detailed information can be found in README.md
-            timestamp=data["/robot0/sensor/imu"]["data"].header.timestamp,
-        )
-        # print("frame_img timestamp: ", frame_img["timestamp"], "frame_pose timestamp: ", frame_pose["timestamp"])
+    # decode imu data
+    vio_pose_data = bag.get_topic_data("/robot0/vio/eef_pose")
+    if vio_pose_data is not None:
+        print(f"Find {len(vio_pose_data)} vio pose data")
+        for d in vio_pose_data:
+            single_frame_pose = dict(
+                data=d[
+                    "decode_data"
+                ],  # [Pos_X, Pos_Y, Pos_Z, Q_X, Q_Y, Q_Z, Q_W], detailed information can be found in README.md
+                timestamp=d["data"].header.timestamp,
+            )
+    else:
+        print("No vio pose data found")
 
 
 def parse_args():
