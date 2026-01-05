@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package arnold.common.proto;
+
+message Input {
+  string topic_name = 1;
+  uint32 sequence_num = 2;
+  uint64 timestamp = 3;
+}
+
+message Header {
+  string module_name = 1;
+  uint32 sequence_num = 2;
+  uint64 timestamp = 3;
+  string topic_name = 4;
+  double expect_hz = 5;
+  repeated Input inputs = 6;
+}

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package foxglove;
+
+import "header.proto";
+import "google/protobuf/timestamp.proto";
+
+// Audio configuration from sensor.yaml
+message AudioConfig {
+  uint32 sample_rate = 1;      // e.g. 16000 Hz
+  uint32 channels = 2;         // e.g. 1 (mono), 2 (stereo)
+  uint32 bit_depth = 3;        // e.g. 16
+  string format = 4;           // e.g. "PCM_16"
+  string device_name = 5;      // e.g. "hw:2,0"
+  uint32 period_size = 6;      // e.g. 1024
+}
+
+// Audio data message containing chunked audio samples
+message AudioData {
+  // Standard header with timestamp and metadata
+  arnold.common.proto.Header header = 1;
+  
+  // Frame of reference for the audio sensor
+  string frame_id = 2;
+  
+  // Audio configuration (from sensor.yaml)
+  AudioConfig config = 3;
+  
+  // Raw audio data (PCM samples)
+  bytes audio_data = 4;
+  
+  // Number of samples in this chunk
+  uint32 sample_count = 5;
+  
+  // Chunk duration in seconds
+  double chunk_duration = 6;
+  
+  // Sequence number for this audio chunk within the entire audio file
+  uint32 chunk_sequence = 7;
+  
+  // Total number of chunks in the entire audio file
+  uint32 total_chunks = 8;
+}

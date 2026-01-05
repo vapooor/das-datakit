@@ -1,0 +1,26 @@
+syntax = "proto3";
+package foxglove;
+
+message TopicInfo {
+  string schema_name = 1;
+  string topic = 2;
+}
+
+message TopicList {
+  repeated TopicInfo topic_info = 1;
+}
+
+message ChannelInfo {
+  string schema_name = 1;
+  int64 publish_time = 2;
+  bytes data = 3;
+  int64 data_size = 4;
+  string topic = 5;
+}
+
+message ChannelData {
+  oneof data {
+    TopicList topic_list = 1;
+    ChannelInfo channel_info = 2;
+  }
+}

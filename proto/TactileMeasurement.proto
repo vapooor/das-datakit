@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package foxglove;
+
+import "header.proto";
+
+// TactileMeasurement represents a tactile/pressure sensor measurement
+// Contains pressure data from a 12x8 matrix sensor array
+message TactileMeasurement {
+  arnold.common.proto.Header header = 1;
+  
+  string frame_id = 2;
+  
+  // Pressure sensor configuration
+  uint32 rows = 3;     // Number of rows in matrix (12)
+  uint32 cols = 4;     // Number of columns in matrix (8) 
+  
+  // Pressure data stored in row-major order
+  // Array length should be rows * cols = 96
+  repeated float pressure_data = 5;
+  
+  // Optional: pressure unit
+  string pressure_unit = 6;  // e.g. "Pa", "N", "kPa", etc.
+  
+  // Optional: sensor calibration info
+  float min_pressure = 7;    // Minimum detectable pressure
+  float max_pressure = 8;    // Maximum detectable pressure
+}
+
+

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package foxglove;
+
+import "header.proto";
+import "Vector3.proto";
+import "Quaternion.proto";
+
+// cam coord
+message SingleBox {
+  // 3d BoxAnnotation
+  foxglove.Vector3 center = 1;
+  foxglove.Vector3 size = 2;
+  foxglove.Quaternion orientation = 3;
+  string name = 4;
+  string sem_label = 5;
+  // 2d BoxAnnotation
+}
+
+message BoxAnnotation {
+  repeated SingleBox boxes = 1;
+  arnold.common.proto.Header header = 10;
+}

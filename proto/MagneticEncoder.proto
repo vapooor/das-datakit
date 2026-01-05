@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package foxglove;
+
+import "header.proto";
+
+
+message MagneticEncoderMeasurement {
+  arnold.common.proto.Header header = 1;
+
+  string frame_id = 2;
+
+  double value = 3;
+} 

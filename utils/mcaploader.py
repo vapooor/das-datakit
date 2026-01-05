@@ -15,16 +15,60 @@ from .topic_parser import (
 from collections import defaultdict
 from .sync_graph import RelationGraph
 import io
+import sys
+sys.path.append(osp.join(osp.dirname(__file__), "../pb2"))
+from pb2.IMUMeasurement_pb2 import IMUMeasurement
+from pb2.CameraCalibration_pb2 import CameraCalibration
+from pb2.SystemInfo_pb2 import SystemInfo
+from pb2.TactileMeasurement_pb2 import TactileMeasurement
+from pb2.MagneticEncoder_pb2 import MagneticEncoderMeasurement
+from pb2.CompressedImage_pb2 import CompressedImage
+from pb2.PoseInFrame_pb2 import PoseInFrame
+from pb2.RobotInfo_pb2 import RobotInfo
 import pdb
+
+PROTO_MAPPING = {
+    "/robot0/sensor/camera0/compressed": CompressedImage,
+    "/robot0/sensor/camera1/compressed": CompressedImage,
+    "/robot0/sensor/camera2/compressed": CompressedImage,
+    "/robot0/sensor/imu": IMUMeasurement,
+    "/robot0/sensor/camera0/camera_info": CameraCalibration,
+    "/robot0/sensor/camera1/camera_info": CameraCalibration,
+    "/robot0/sensor/camera2/camera_info": CameraCalibration,
+    "/robot0/system_info": SystemInfo,
+    "/robot0/sensor/tactile_left": TactileMeasurement,
+    "/robot0/sensor/tactile_right": TactileMeasurement,
+    "/robot0/sensor/magnetic_encoder": MagneticEncoderMeasurement,
+    "/robot0/vio/eef_pose": PoseInFrame,
+    "/robot0/sim/robot_info": RobotInfo,
+
+    "/robot1/sensor/camera0/compressed": CompressedImage,
+    "/robot1/sensor/camera1/compressed": CompressedImage,
+    "/robot1/sensor/camera2/compressed": CompressedImage,
+    "/robot1/sensor/imu": IMUMeasurement,
+    "/robot1/sensor/camera0/camera_info": CameraCalibration,
+    "/robot1/sensor/camera1/camera_info": CameraCalibration,
+    "/robot1/sensor/camera2/camera_info": CameraCalibration,
+    "/robot1/system_info": SystemInfo,
+    "/robot1/sensor/tactile_left": TactileMeasurement,
+    "/robot1/sensor/tactile_right": TactileMeasurement,
+    "/robot1/sensor/magnetic_encoder": MagneticEncoderMeasurement,
+    "/robot1/vio/eef_pose": PoseInFrame,
+    "/robot1/sim/robot_info": RobotInfo,
+}
 
 def ns_to_s(ns):
     return float(ns) / 1e9
 
-def parse_single_topic(reader: McapReader, topic: str):
+def parse_topic_data(reader: McapReader, topic: str):
+    if topic not in PROTO_MAPPING:
+        print(f"topic {topic} is not in PROTO_MAPPING.")
+        return []
+    proto_msg_class = PROTO_MAPPING[topic]
     topic_msgs = []
-    for schema, channel, message, proto_msg in reader.iter_decoded_messages():
-        if channel.topic != topic:
-            continue
+    for schema, channel, message in reader.iter_messages(topics=[topic]):
+        proto_msg = proto_msg_class()
+        proto_msg.ParseFromString(message.data)
         topic_msgs.append({
             "data": proto_msg,
             "log_time": message.log_time,
@@ -221,7 +265,7 @@ class McapLoader:
         bag_data = {}
         for topic_name in not_loaded_topics:
             self._reset_stream()
-            topic_msgs = parse_single_topic(self._mcap_reader, topic_name)
+            topic_msgs = parse_topic_data(self._mcap_reader, topic_name)
             # auto decompress
             if auto_decompress:
                 try:

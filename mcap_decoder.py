@@ -3,34 +3,16 @@ import cv2
 from utils.mcaploader import McapLoader
 import pdb
 
-PROCESS_TOPIC = [
-    # mid fisheye camera
-    "/robot0/sensor/camera0/compressed",
-    # left stereo camera, sync with timestamp
-    "/robot0/sensor/camera1/compressed",
-    # right stereo camera, sync with timestamp
-    "/robot0/sensor/camera2/compressed",
-    # imu, sync with interpolation
-    "/robot0/sensor/imu",
-    # tactile sensor, sync with interpolation
-    "/robot0/sensor/tactile_left",
-    "/robot0/sensor/tactile_right",
-    # gripper width, sync with interpolation
-    "/robot0/sensor/magnetic_encoder",
-    # gripper pose, sync with interpolation
-    "/robot0/vio/eef_pose",
-]
-
-
 def parse_mcap(mcap_file):
     bag = McapLoader(mcap_file)
+    print(bag.all_topic_names)
     # step 1
     # parse all data we need
-    bag.load_topics(PROCESS_TOPIC, auto_sync=False)
+    bag.load_topics(bag.all_topic_names, auto_sync=False)
     print(bag)
 
     # decode images
-    camera0_img_data = bag.get_topic_data("/robot0/sensor/camera0/compressed")
+    camera0_img_data = bag.get_topic_data("/robot1/sensor/camera0/compressed")
 
     video_writer = None
     fps = 30
@@ -47,7 +29,6 @@ def parse_mcap(mcap_file):
             w = w // 4
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             video_writer = cv2.VideoWriter(output_video_path, fourcc, fps, (w, h))
-            print(f"开始保存视频到 {output_video_path}, 分辨率: {w}x{h}, 帧率: {fps}")
 
         img = cv2.resize(single_frame_img["data"], (w, h))
         video_writer.write(img)

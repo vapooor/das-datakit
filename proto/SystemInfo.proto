@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package foxglove;
+
+import "header.proto";
+
+message SystemInfo {
+  arnold.common.proto.Header header = 1;
+  string frame_id = 2;
+  int64 pid = 3;
+  uint64 memory_kb = 4; // Memory usage in KB (RSS)
+  uint64 rss_kb = 5; //  Resident Set Size in KB (physical memory)
+  float cpu_percent = 6; // CPU usage percentage (0-100%, can exceed 100% for multi-threaded)
+  float memory_percent =7;        // Memory usage percentage
+  uint64 io_read_bytes_per_sec =8;  // Read bytes per second
+  uint64 io_write_bytes_per_sec =9; // Write bytes per second
+} 

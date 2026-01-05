@@ -4,3 +4,4 @@ mcap==1.2.2
 mcap_protobuf_support==0.5.3
 numpy==1.26.4
 opencv_python==4.11.0.86
+protobuf==5.28.3

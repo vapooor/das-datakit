@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package foxglove;
+
+import "google/protobuf/timestamp.proto";
+import "header.proto";
+import "Size3D.proto";
+
+// 整个占据网格
+message SparseOccupancyMap {
+  foxglove.Size3D space_size = 1;
+  foxglove.Size3D pc_range_min = 2;
+  foxglove.Size3D pc_range_max = 3;
+  float resolution = 4;
+  fixed32 occ_stride = 5;
+  bytes data = 6;  // 包含的占据块
+
+  arnold.common.proto.Header header = 10;
+}
