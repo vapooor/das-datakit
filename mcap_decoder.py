@@ -7,10 +7,11 @@ def parse_mcap(mcap_file):
     bag = McapLoader(mcap_file)
     print(bag.all_topic_names)
     print(bag)
+    # default load all topics
+    bag.load_topics(bag.all_topic_names, auto_sync=False)
 
     # decode images
     camera0_img_data = bag.get_topic_data("/robot0/sensor/camera0/compressed")
-
     if camera0_img_data is not None:
         video_writer = None
         fps = 30
